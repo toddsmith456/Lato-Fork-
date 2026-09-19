@@ -20,8 +20,8 @@ android {
         applicationId "ardash.lato"
         minSdkVersion 14
         targetSdkVersion 33
-        versionCode 1001006
-        versionName "1.1.6"
+        versionCode 2000000
+        versionName "2.0.0"
     }
     buildTypes {
         release {

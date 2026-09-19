@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pools;
 
 import ardash.lato.actors3.AbyssCollider;
+import ardash.lato.actors3.ChasmBonusZone;
 import ardash.lato.actors3.CliffLeft;
 import ardash.lato.actors3.CliffRight;
 import ardash.lato.actors3.Coin;
@@ -51,8 +52,12 @@ public class Canyon extends Section {
 		// cliffs can't be attached perfectly to the edge, because the share renderer moves it slightly, especially when removing old items
 		TerrainItem cliffLeft = new CliffLeft(3.90f,-27.695f); 
 		surroundingItems.add(cliffLeft);
-		TerrainItem cliffRight = new CliffRight(21.50f,-35.4595f); 
+		TerrainItem cliffRight = new CliffRight(21.50f,-35.4595f);
 		surroundingItems.add(cliffRight);
+
+		// the 'Chasm Jump!' bonus zone sits at the far (right) edge of the abyss:
+		// any rider who passes it alive gets the bonus, exactly like in Alto's Adventure
+		surroundingItems.add(new ChasmBonusZone(22.5f, -2.5f, 7.5f, 15f));
 		// TODO don't do culling the t segments when a canyon is on the screen
 		
 		// mist in the abyss

@@ -199,14 +199,30 @@ public class A {
 
 	/**
 	 * Sound asset (for single sounds)
-	 * 
+	 *
 	 */
 	public enum SoundAsset {
-		COINDROP;
+		COINDROP("mp3"),
+		/** flip whoosh */
+		WHOOSH("wav"),
+		/** sonic boost activation (power-up riser) */
+		POWERUP("wav"),
+		/** rock smash */
+		SMASH("wav");
+
+		private final String extension;
+
+		SoundAsset() {
+			this("mp3");
+		}
+
+		SoundAsset(String extension) {
+			this.extension = extension;
+		}
 
 		@Override
 		public String toString() {
-			return "sounds/" + super.toString().toLowerCase(Locale.ENGLISH) + ".mp3";
+			return "sounds/" + super.toString().toLowerCase(Locale.ENGLISH) + "." + extension;
 		}
 	}
 	

@@ -29,6 +29,20 @@ task debug(dependsOn: classes, type: JavaExec) {
     debug = true
 }
 
+// automated gameplay smoke test (headless CI via: xvfb-run ./gradlew :desktop:smokeTest)
+task smokeTest(dependsOn: classes, type: JavaExec) {
+    main = 'ardash.lato.SmokeTestLauncher'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+
+    if (OperatingSystem.current() == OperatingSystem.MAC_OS) {
+        // Required to run on macOS
+        jvmArgs += "-XstartOnFirstThread"
+    }
+}
+
 task dist(type: Jar) {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {

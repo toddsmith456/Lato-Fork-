@@ -26,17 +26,20 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.FloatCounter;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.PerformanceCounter;
 import com.badlogic.gdx.utils.StringBuilder;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -420,29 +423,90 @@ public class GameScreen implements Screen {
 		Label lblDistance = new Label("0m", A.LabelStyleAsset.DISTANCE_LABEL.style) {
 			public void act(float delta) {
 				super.act(delta);
+				// hide the in-run HUD once the run ended: the game-over dialog takes over
+				setVisible(!performer.getState().isCrashed());
 				// we don't use a listener here, because the meters update all the time (each frame)
 				setText(performer.getTraveledDistanceMeters()+"m");
 			};
 		};
 		lblDistance.setAlignment(Align.topRight);
-		
+
 		// coin label
 		Label lblCoins = new Label("Coins: 0", A.LabelStyleAsset.DISTANCE_LABEL.style) {
 			public void act(float delta) {
 				super.act(delta);
+				setVisible(!performer.getState().isCrashed());
 				setText("Coins: " + gm.getCoinsPickedUpThisRound());
 			};
 		};
 		lblCoins.setAlignment(Align.topLeft);
-		
+
+		// score label (Alto's Adventure style trick scoring)
+		Label lblScore = new Label("Score: 0", A.LabelStyleAsset.DISTANCE_LABEL.style) {
+			public void act(float delta) {
+				super.act(delta);
+				setVisible(!performer.getState().isCrashed());
+				setText("Score: " + gm.getTotalScoreThisRound(performer.getTraveledDistanceMeters()));
+			};
+		};
+		lblScore.setAlignment(Align.top);
+
+		// best-distance label
+		Label lblBest = new Label("Best: 0m", A.LabelStyleAsset.SMALL_TEXT.style) {
+			public void act(float delta) {
+				super.act(delta);
+				setVisible(!performer.getState().isCrashed());
+				setText("Best: " + gm.getBestDistanceMeters() + "m");
+			};
+		};
+		lblBest.setAlignment(Align.topRight);
+
 		//add labels
 		mainTable.setFillParent(true);
-		mainTable.row().expandX().fillX().expand().fill();
+		mainTable.row().expandX().fillX();
 		mainTable.add(lblCoins).left().pad(15f);
+		mainTable.add(lblScore).center().pad(15f);
 		mainTable.add(lblDistance).right().pad(15f);
+		mainTable.row().expandX();
+		mainTable.add();
+		mainTable.add();
+		mainTable.add(lblBest).right().pad(15f);
 		mainTable.row().expandY();
 
 
+	}
+
+	private int popupSpawnCounter = 0;
+
+	/** floats all queued trick popups ('Backflip! +10') onto the GUI stage */
+	private void spawnPendingPopups() {
+		final Array<String> popups = gm.getPendingPopups();
+		while (popups.size > 0) {
+			spawnPopup(popups.removeIndex(0));
+		}
+	}
+
+	private void spawnPopup(String text) {
+		final Label popup = new Label(text, A.LabelStyleAsset.DISTANCE_LABEL.style);
+		popup.setAlignment(Align.center);
+		// must never swallow touch input: it is the only game control
+		popup.setTouchable(Touchable.disabled);
+		final float screenW = guiStage.getViewport().getWorldWidth();
+		final float screenH = guiStage.getViewport().getWorldHeight();
+		// stack up to 3 simultaneous popups
+		final int slot = popupSpawnCounter++ % 3;
+		popup.pack();
+		popup.setPosition((screenW - popup.getWidth())/2f, screenH*0.62f - slot*52f*Gdx.graphics.getDensity());
+		popup.getColor().a = 0f;
+		popup.addAction(Actions.sequence(
+				Actions.fadeIn(0.08f),
+				Actions.parallel(
+						Actions.moveBy(0, 70f*Gdx.graphics.getDensity(), 1.15f, Interpolation.sineOut),
+						Actions.sequence(Actions.delay(0.62f), Actions.fadeOut(0.45f))
+				),
+				Actions.removeActor()
+		));
+		guiStage.addActor(popup);
 	}
 
 	private void addDebugInfoView() {
@@ -526,10 +590,11 @@ public class GameScreen implements Screen {
 //    	Scarf sc = stage.getRoot().findActor("scarf");
 //    	sc.setPosition(performer.getX(), performer.getY());
     	
-    	guiStage.act(delta); // contains weather provider
+   	guiStage.act(delta); // contains weather provider
+   	spawnPendingPopups();
 
-    	backStage.act(delta);
-    	mountainStage3d.act(delta);
+   	backStage.act(delta);
+   	mountainStage3d.act(delta);
        	stage3d.act(delta);
     	frontStage.act(delta);
 

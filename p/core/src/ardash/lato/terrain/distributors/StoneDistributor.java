@@ -36,7 +36,7 @@ public class StoneDistributor extends ColliderDistributor {
 	@Override
 	public void reset() {
 		super.reset();
-		currMaxX = 500;// don't put anything in the first 100
+		currMaxX = 150;// don't put any stones in the first 150 m (Alto-like: rocks appear early, so the boost-smash mechanic matters from the start)
 	}
 	
 	public int getCurrMaxX() {
@@ -80,7 +80,7 @@ public class StoneDistributor extends ColliderDistributor {
 
 	@Override
 	protected int getDesiredAmountPer1000m() {
-		return 5;
+		return 7; // slightly denser rocks, so force-field rock smashing is a regular event
 	}
 
 }
