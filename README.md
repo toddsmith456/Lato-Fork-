@@ -7,7 +7,7 @@
 
 ![screenshot](metadata/en-GB/images/featureGraphic.png)
 
-# What's new in this fork (v2.0.0)
+# What's new in this fork (v2.2.0)
 
 Everything that makes Alto's Adventure fun, rebuilt into Lato:
 
@@ -29,9 +29,12 @@ Everything that makes Alto's Adventure fun, rebuilt into Lato:
 * Boosted top speed rises from 29.3 to 38.5 m/s; the camera pulls back with the speed.
 
 ## Much smoother rider
-* Rotation pivot eases between board (ground) and rider centre (air) – flips look right.
-* Board smoothly aligns with the slope on landing instead of snapping to it.
+* Original-Lato flip feel: a slow, constant flip (~2 s per full backflip, like the
+  upstream game) — very forgiving releases; flips are saved for proper jumps.
+* Consistent jump height at every speed (no speed-scaled weirdness).
 * **Jump buffering**: touching the screen a split second before touchdown still jumps.
+* Compact top-of-screen HUD: coins and best score left, score centre, distance right.
+* The scarf always stays on Lato (flows with speed, never vanishes).
 * Squash & stretch animation on take-off and landing; speed changes ease instead of jumping.
 * Rocks appear earlier (after 150 m) and slightly denser, so the smash mechanic matters.
 

@@ -43,7 +43,9 @@ public class Canyon extends Section {
 		
 //		surroundingItems.add(new AbyssCollider(10, -40, 25, -5));
 		// note: we can't use the collider to show fog
-		surroundingItems.add(new AbyssCollider(9, -30, 17, 24.5f));
+		// taller kill zone: its top reaches -3.5 so falling into the chasm registers
+		// quickly and reliably instead of letting the rider sink along the cliff faces
+		surroundingItems.add(new AbyssCollider(9, -30, 17, 26.5f));
 //		surroundingItems.add(new AbyssMist(9-35, -30-10, 17+35*2, 24.5f+10*2));
 //		AbyssMist am2 = new AbyssMist(9-35, -30-10, 17+35*2, 24.5f+10*2);
 //		am2.setZ(am2.getZ()+1);

@@ -101,16 +101,18 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 	private static final float BOOST_MAX_SPEED = 38.5f;  // top speed while sonic-boosted
 	private static final float MIN_CAM_SPOT_X = 10f;
 	private static final float MAX_CAM_SPOT_X = 26f;
-	private static final float JUMP_FORCE = 3.85f;       // vertical take-off speed (m/s)
-	private static final float JUMP_SPEED_BONUS = 0.075f;// extra jump force per m/s of speed
+	private static final float JUMP_FORCE = 4.7f;        // constant vertical take-off speed (m/s) — consistent feel
 	private static final float GRAVITY = 11.5f;          // slightly floaty, for trick airtime
 	private static final float GROUND_ACCEL = 5.1f;      // downhill acceleration
 	private static final float AIR_DRAG = 1.1f;
 
 	// ---- trick tuning --------------------------------------------------------
-	private static final float FLIP_START_SPEED = 340f;  // deg/s at the beginning of a flip
-	private static final float FLIP_MAX_SPEED = 560f;    // deg/s after ramp-up
-	private static final float FLIP_RAMP_RATE = 6f;      // how fast the flip accelerates (1/s)
+	// faithful to the original Lato feel: slow, constant flip speed (upstream used
+	// a fixed 180 deg/s, ~2 s per flip) — very forgiving releases, flips reserved
+	// for proper jumps off drops and canyon lip take-offs
+	private static final float FLIP_START_SPEED = 165f;  // deg/s at the beginning of a flip
+	private static final float FLIP_MAX_SPEED = 195f;    // deg/s after ramp-up
+	private static final float FLIP_RAMP_RATE = 4f;      // how fast the flip accelerates (1/s)
 	private static final float AIR_ALIGN_RATE = 150f;    // deg/s the board seeks the slope in free air
 	private static final float GROUND_ALIGN_RATE = 11f;  // exponential rate the board seeks the slope on ground
 	private static final float SAFE_LANDING_ANGLE = 62f; // max angle difference to the slope that still lands
@@ -130,6 +132,7 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 	private static final float BOOST_GROUND_ACCEL = 6.5f;// m/s gained per second while boosted (ground)
 	private static final float BOOST_AIR_ACCEL = 3.2f;   // m/s gained per second while boosted (air)
 	private static final float BOOST_ROCK_EXTEND = 0.85f;// extra seconds of boost per smashed rock
+	private static final float BOOST_SMASH_GRACE = 0.30f;// force-field residue: rocks still break briefly after expiry
 	private static final float SPEED_DECAY = 2.3f;       // m/s lost per second above MAX_SPEED when not boosted
 
 	private float speed = 0f; // speed in m/s
@@ -162,11 +165,11 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 
 	// ---- boost state ----------------------------------------------------------
 	private float boostTimeLeft = 0f;
+	private float boostSmashGrace = 0f; // force-field residue after the boost expires
 
 	// ---- cosmetic animation state ---------------------------------------------
 	private float squashAmount = 0f;       // <0 squashed (landing), >0 stretched (jump)
 	private float duckHoldTimer = 0f;      // how long the DUCK pose is held after landing
-	private float pivotLerp = 0f;          // 0 = pivot on the board, 1 = pivot at body centre
 
 	private float jumpBufferTimer = 0f;    // grace jump after touching just before touchdown
 
@@ -245,8 +248,13 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 			boostTimeLeft = Math.max(0f, boostTimeLeft - delta);
 			if (boostTimeLeft <= 0f) {
 				boostTimeLeft = 0f;
+				// the force field dies through a short residue so a rock clipped
+				// on the last frames of the glow still breaks (fairness fix)
+				boostSmashGrace = BOOST_SMASH_GRACE;
 			}
 		}
+		if (boostSmashGrace > 0f)
+			boostSmashGrace = Math.max(0f, boostSmashGrace - delta);
 		boostBubble.setVisible(isBoosting());
 		speed = MathUtils.clamp(speed, state.isCrashed() ? 0f : (state.isStarted() ? MIN_SPEED : 0f), BOOST_MAX_SPEED);
 
@@ -285,9 +293,8 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 		final float deltaX = velocity.x;
 		moveBy(deltaX*delta, 0);
 
-		// pivot eases back to the board while grounded
-		pivotLerp = Math.max(0f, pivotLerp - delta*4f);
-		setOriginY(MathUtils.lerp(0f, PERFORMER_WIDTH/2f, pivotLerp));
+		// rotation pivot stays at the board centre (see constructor) — moving it made
+		// the rider visibly sink into the snow, so it is intentionally fixed now
 
 		// restore the RIDE pose shortly after a landing
 		if (duckHoldTimer > 0f) {
@@ -376,10 +383,6 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 		// gravity
 		vspeed -= GRAVITY*delta;
 		moveBy(0, vspeed*delta);
-
-		// pivot eases to the body centre so flips rotate around the rider
-		pivotLerp = Math.min(1f, pivotLerp + delta*5f);
-		setOriginY(MathUtils.lerp(0f, PERFORMER_WIDTH/2f, pivotLerp));
 
 		// boost also works in the air (but weaker than on the ground)
 		if (isBoosting()) {
@@ -556,8 +559,7 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 			state = PlayerState.SLIDING; // moveTo would refuse INIT->INAIR on the very first frame
 		clearActions();
 		setState(PlayerState.INAIR);
-		// faster riding = higher jumps (Alto ramps/kickers feel), capped for sanity
-		this.vspeed = initialVSpeed <= 0f ? 0f : initialVSpeed + (getSpeed()-MIN_SPEED)*JUMP_SPEED_BONUS;
+		this.vspeed = initialVSpeed <= 0f ? 0f : initialVSpeed;
 		flipAccumDeg = 0f;
 		flipsAnnounced = 0;
 		flipSpeed = FLIP_START_SPEED;
@@ -632,6 +634,11 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 		return boostTimeLeft > 0f && !state.isCrashed();
 	}
 
+	/** rocks break during the boost AND for a short grace right after it ends */
+	public boolean canSmashRocks() {
+		return (isBoosting() || boostSmashGrace > 0f) && !state.isCrashed();
+	}
+
 	/** remaining boost seconds, e.g. for HUD effects */
 	public float getBoostTimeLeft() {
 		return boostTimeLeft;
@@ -643,7 +650,7 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 	 * @return true if the stone was smashed (rider survives), false if not boosted
 	 */
 	public boolean smashRock(Stone stone) {
-		if (!isBoosting())
+		if (!canSmashRocks())
 			return false;
 
 		getGameManager().onRockSmashed(ROCK_SMASH_POINTS);
@@ -667,6 +674,7 @@ public class Performer extends Group3D implements Disposable, AmbientColorChange
 		isUserInputDown = false;
 		jumpBufferTimer = 0f;
 		boostTimeLeft = 0f;
+		boostSmashGrace = 0f;
 		setState(PlayerState.CRASHED);
 		setPose(crashPose);
 		addAction(Actions3D.sequence(

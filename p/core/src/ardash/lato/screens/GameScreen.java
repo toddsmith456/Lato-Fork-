@@ -348,10 +348,11 @@ public class GameScreen implements Screen {
 				// the camera will be moved by onPositionChange()
 //				cam.moveTo(lastx, lasty, newz, 0.1f);
 				
+				// the scarf always stays on Lato: short when slow, flowing when fast
 				if (performer.getState().isCrashed()) {
-					scarf.setLength(0f);
+					scarf.setLength(0.15f);
 				} else {
-					scarf.setLength(percentage);
+					scarf.setLength(0.15f + percentage*0.85f);
 				}
 			}
 
@@ -461,17 +462,19 @@ public class GameScreen implements Screen {
 		};
 		lblBest.setAlignment(Align.topRight);
 
-		//add labels
+		//add labels: one compact HUD row hugging the top edge
+		lblScore.setFontScale(0.66f);
+		lblDistance.setFontScale(0.66f);
 		mainTable.setFillParent(true);
-		mainTable.row().expandX().fillX();
-		mainTable.add(lblCoins).left().pad(15f);
-		mainTable.add(lblScore).center().pad(15f);
-		mainTable.add(lblDistance).right().pad(15f);
-		mainTable.row().expandX();
+		mainTable.top();
+		mainTable.row().fillX();
+		mainTable.add(lblCoins).expandX().left().pad(12f, 14f, 0, 0);
+		mainTable.add(lblScore).center().pad(14f, 0, 0, 0);
+		mainTable.add(lblDistance).expandX().right().pad(14f, 14f, 0, 0);
+		mainTable.row().fillX();
+		mainTable.add(lblBest).expandX().left().pad(12f, 4f, 0, 0);
 		mainTable.add();
 		mainTable.add();
-		mainTable.add(lblBest).right().pad(15f);
-		mainTable.row().expandY();
 
 
 	}

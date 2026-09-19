@@ -99,9 +99,13 @@ public class Stone extends Image3D implements CollidingTerrainItem , Poolable{
 	public void onCollision() {
 		final Performer performer = getGameScreen().performer;
 
-		// Alto-style rock smash: while the force field from a trick is up,
-		// the rock shatters instead of ending the run
-		if (!performer.getState().isCrashed() && performer.isBoosting()) {
+		// a crashed rider sliding into more rocks must not crash again
+		if (performer.getState().isCrashed())
+			return;
+
+		// Alto-style rock smash: while the force field from a trick is up
+		// (or in its short grace afterglow), the rock shatters instead of ending the run
+		if (performer.canSmashRocks()) {
 			if (performer.smashRock(this)) {
 				hasCollided = true;
 				remove();

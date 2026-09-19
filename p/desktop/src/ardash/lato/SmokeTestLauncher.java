@@ -252,7 +252,7 @@ public class SmokeTestLauncher {
 					if (p.speed >= 14f) {
 						log("bot: canyon ahead (" + fmt(p.dropAhead) + "m drop), jump+flip @dist " + p.dist
 								+ " speed " + fmt(p.speed));
-						startSmartHold(2400);
+						startSmartHold(2700);
 						wantedHold = true;
 					} else {
 						log("bot: canyon ahead at low speed, plain hop @dist " + p.dist);
@@ -265,11 +265,12 @@ public class SmokeTestLauncher {
 				} else if (!p.inAir && p.stoneDist > 0 && p.stoneDist < 6f && p.boosting) {
 					// force field up and rock close: plow straight through it
 					log("bot: smashing through rock @dist " + p.dist);
-				} else if (!p.inAir && p.speed > 14f && p.dist > 15
+				} else if (!p.inAir && p.speed > 14f && p.dist > 15 && p.dropAhead > 1.2f
 						&& System.currentTimeMillis() - lastFlipEndedAt > 1500) {
-					// regular trick cadence: flip for score + boost (human-style release)
-					log("bot: trick flip for score @dist " + p.dist + " speed " + fmt(p.speed));
-					startSmartHold(1800);
+					// regular trick cadence: flip off a drop for score + boost; slow-Lato
+					// flips need a falling slope ahead to have enough air to finish
+					log("bot: trick flip over a drop for score @dist " + p.dist + " speed " + fmt(p.speed));
+					startSmartHold(2200);
 					wantedHold = true;
 				}
 

@@ -89,6 +89,10 @@ public class ChasmBonusZone extends Image3D implements TerrainItem , Poolable{
 			return;
 		if (pY < getY() || pY > getY()+getHeight())
 			return;
+		// and must still be above the chasm lip: a rider who dropped into the pit
+		// passes through this zone too, but falling in is not a chasm jump
+		if (pY < getY() + 1.0f)
+			return;
 
 		hasCollided = true;
 		getGameManager().onChasmJumped(CHASM_JUMP_POINTS);
