@@ -91,7 +91,7 @@ Option 1: [![Get it on F-Droid](https://f-droid.org/wiki/images/3/31/F-Droid-but
 
 Option 2: Build it from source
 
-	git clone <this-repo>
+	git clone https://github.com/toddsmith456/Lato-Fork-.git
 	cd lato/p
 	./gradlew assembleDebug
 	# signed debug APK:  ./android/build/outputs/apk/debug/android-debug.apk
